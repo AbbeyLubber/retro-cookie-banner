@@ -1,0 +1,562 @@
+﻿<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retro Cookie Banner — free single-file GDPR cookie consent popup in 9 languages</title>
+<meta name="description" content="Free open-source cookie consent banner in one HTML file: vanilla JavaScript, zero dependencies, retro/brutalist style. Auto-detects browser language (English, German, Russian, Ukrainian, Belarusian, Finnish, Estonian, Chinese HK/SG), accept, deny or choose categories, keyboard-accessible, remembers the choice in localStorage.">
+<link rel="canonical" href="https://abbeylubber.github.io/retro-cookie-banner/">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="retro-cookie-banner">
+<meta property="og:title" content="Retro Cookie Banner — single-file GDPR cookie consent popup, 9 languages, zero dependencies">
+<meta property="og:description" content="Drop one HTML file into any website and get a GDPR cookie consent banner with per-category toggles, automatic language detection and keyboard accessibility. MIT licensed.">
+<meta property="og:url" content="https://abbeylubber.github.io/retro-cookie-banner/">
+<meta property="og:image" content="https://abbeylubber.github.io/retro-cookie-banner/social-preview.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="Teal retro cookie consent dialog with Accept All, Deny All and Manage Cookies buttons">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Retro Cookie Banner — single-file GDPR cookie consent popup">
+<meta name="twitter:description" content="One HTML file, zero dependencies, 9 languages, category toggles, keyboard-accessible. MIT.">
+<meta name="twitter:image" content="https://abbeylubber.github.io/retro-cookie-banner/social-preview.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "name": "retro-cookie-banner",
+  "alternateName": "Retro Cookie Banner",
+  "description": "Free open-source cookie consent banner (GDPR cookie popup) in a single HTML file. Vanilla JavaScript, zero dependencies, retro/brutalist style, automatic browser-language detection with nine built-in languages, accept/deny/per-category toggles, keyboard-accessible, stores the choice in localStorage.",
+  "url": "https://abbeylubber.github.io/retro-cookie-banner/",
+  "codeRepository": "https://github.com/AbbeyLubber/retro-cookie-banner",
+  "programmingLanguage": ["HTML", "CSS", "JavaScript"],
+  "runtimePlatform": "Web browser",
+  "license": "https://opensource.org/licenses/MIT",
+  "isAccessibleForFree": true,
+  "keywords": "cookie consent, cookie banner, cookie popup, cookie notice, GDPR, ePrivacy, vanilla JavaScript, single file, zero dependencies, i18n, multilingual, localStorage, accessibility",
+  "screenshot": "https://abbeylubber.github.io/retro-cookie-banner/screenshots/main-en.png",
+  "author": { "@type": "Person", "name": "Abbey Lubber", "url": "https://github.com/AbbeyLubber" }
+}
+</script>
+<style>
+  :root {
+    --bg: #1fb5bd;
+    --ink: #000;
+    --paper: #fff;
+    --accent: #f5f542;
+    --font: "JetBrains Mono", "Courier New", Consolas, monospace;
+    /* monospace fonts have no CJK glyphs, so add CJK fallbacks */
+    --font-cjk: "JetBrains Mono", "PingFang HK", "PingFang SC", "Microsoft JhengHei", "Microsoft YaHei", "Noto Sans TC", "Noto Sans SC", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--font);
+    background: #d9d9d9;
+    color: #333;
+  }
+  /* lock page scroll while the dialog is open */
+  html.cookie-open { overflow: hidden; }
+  /* demo content behind the dialog */
+  .page { padding: 40px 24px; max-width: 900px; font-size: 20px; line-height: 1.5; }
+  .page h1 { font-size: 34px; margin: 0 0 20px; }
+  .page a { color: inherit; }
+
+  .cookie-overlay {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px 16px;
+    z-index: 1000;
+    overflow-y: auto; overscroll-behavior: contain;
+    background: rgba(0, 0, 0, .45); /* dim the page behind the dialog */
+  }
+  .cookie-overlay[hidden] { display: none; }
+
+  .cookie {
+    position: relative; margin: auto;
+    width: 100%; max-width: 720px;
+    background: var(--bg);
+    border: 3px solid var(--ink);
+    padding: 26px 32px 28px;
+    color: var(--ink);
+    text-align: center;
+    box-shadow: 8px 8px 0 var(--ink);
+  }
+  /* inner frame */
+  .cookie::before {
+    content: ""; position: absolute; inset: 7px;
+    border: 1.5px solid var(--ink);
+    pointer-events: none;
+  }
+  .cookie__title {
+    position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: var(--paper);
+    padding: 3px 8px;
+    font-weight: 700; font-size: 16px; white-space: nowrap;
+  }
+  /* left-aligned paragraphs: centred multi-line text is harder to read */
+  .cookie p {
+    margin: 0 0 16px;
+    font-size: 15px; line-height: 1.55;
+    text-align: left;
+  }
+  .cookie__main p:last-child { margin-bottom: 22px; }
+  .cookie a { color: var(--ink); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+
+  /* Chinese: CJK glyphs need taller lines and a lower underline */
+  .cookie:lang(zh) { font-family: var(--font-cjk); }
+  .cookie:lang(zh) p { line-height: 1.75; }
+  .cookie:lang(zh) a { text-underline-offset: 4px; }
+
+  /* utility row: back link + language switch */
+  .cookie__meta {
+    display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 22px;
+    margin: 0 0 18px;
+    font-size: 13px;
+  }
+  .cookie__meta[hidden], .cookie__lang[hidden], .cookie__back[hidden] { display: none; }
+  .cookie__lang-opt, .cookie__back {
+    font: inherit; font-weight: 700;
+    background: none; border: none; padding: 2px 4px; margin: 0;
+    color: var(--ink); cursor: pointer;
+  }
+  .cookie__lang-opt { margin: 0 2px; }
+  /* inactive language: UPPERCASE, clickable */
+  .cookie__lang-opt--inactive { text-transform: uppercase; }
+  .cookie__lang-opt--inactive:hover, .cookie__back:hover { background: var(--ink); color: var(--bg); }
+  /* active language: lowercase, underlined, not clickable */
+  .cookie__lang-opt--active { text-transform: lowercase; text-decoration: underline; cursor: default; }
+  .cookie__back { text-decoration: underline; }
+
+  .cookie__actions {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 16px;
+  }
+  .cookie__actions--spread { justify-content: space-between; }
+  .cookie__btn {
+    font: inherit; font-weight: 700; font-size: 15px;
+    min-height: 44px;
+    background: var(--paper); color: var(--ink);
+    border: 2px solid var(--ink);
+    padding: 6px 22px;
+    box-shadow: 5px 5px 0 var(--ink);
+    cursor: pointer;
+    transition: transform .08s, box-shadow .08s;
+  }
+  .cookie__btn:hover { transform: translate(2px, 2px); box-shadow: 3px 3px 0 var(--ink); }
+  .cookie__btn:active { transform: translate(5px, 5px); box-shadow: none; }
+  .cookie__btn--primary { background: var(--accent); }
+
+  /* visible keyboard focus on every interactive element */
+  .cookie__btn:focus-visible, .cookie__lang-opt:focus-visible, .cookie__back:focus-visible,
+  .cookie__toggle input:focus-visible + .cookie__switch {
+    outline: 3px solid var(--paper); outline-offset: 2px;
+  }
+
+  /* settings screen */
+  .cookie__settings[hidden] { display: none; }
+  .cookie p.cookie__settings-intro { text-align: center; font-weight: 700; margin-bottom: 16px; }
+  .cookie__toggles {
+    display: grid; grid-template-columns: minmax(0, 1fr);
+    row-gap: 10px;
+    max-width: 480px; margin: 0 auto 20px;
+    text-align: left;
+  }
+  .cookie__toggle {
+    display: flex; align-items: flex-start; gap: 12px;
+    cursor: pointer; user-select: none;
+  }
+  .cookie__toggle--locked { cursor: not-allowed; }
+  /* checkbox is visually hidden but stays keyboard- and screen-reader-accessible */
+  .cookie__toggle input {
+    position: absolute; width: 1px; height: 1px; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+  /* track and knob have a black border so the state is readable without colour */
+  .cookie__switch {
+    flex: 0 0 auto; width: 64px; height: 26px; border-radius: 13px;
+    background: var(--paper); border: 2px solid var(--ink);
+    position: relative;
+    transition: background .15s;
+  }
+  /* state label sits on the side not covered by the knob */
+  .cookie__switch::before {
+    content: "OFF"; position: absolute; top: 0; right: 0; bottom: 0;
+    width: 36px; display: flex; align-items: center; justify-content: center;
+    font-family: var(--font); font-size: 10px; font-weight: 700; letter-spacing: .5px;
+    color: var(--ink);
+  }
+  .cookie__switch::after {
+    content: ""; position: absolute; top: 50%; left: 1px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--paper); border: 2px solid var(--ink);
+    transform: translateY(-50%);
+    transition: transform .15s, background .15s;
+  }
+  .cookie__toggle input:checked + .cookie__switch { background: var(--ink); }
+  .cookie__toggle input:checked + .cookie__switch::before { content: "ON"; right: auto; left: 0; color: var(--paper); }
+  .cookie__toggle input:checked + .cookie__switch::after { transform: translate(36px, -50%); background: var(--bg); border-color: var(--paper); }
+  .cookie__toggle-text { display: flex; flex-direction: column; min-width: 0; }
+  .cookie__toggle-name {
+    display: flex; align-items: center;
+    min-height: 26px; /* = track height, so both centres line up */
+    font-weight: 700; font-size: 15px; line-height: 1.4;
+  }
+  .cookie__toggle-tag { font-weight: 400; font-size: 12px; margin-left: 8px; white-space: nowrap; }
+  .cookie__toggle-desc { font-size: 12px; line-height: 1.45; }
+  .cookie:lang(zh) .cookie__toggle-desc { line-height: 1.6; }
+
+  /* stack buttons while three do not fit in a row */
+  @media (max-width: 640px) {
+    .cookie__actions { flex-direction: column; gap: 12px; }
+    .cookie__btn { width: 100%; }
+  }
+  @media (max-width: 480px) {
+    .cookie { padding: 24px 16px 22px; }
+    .cookie__toggle-name { flex-wrap: wrap; }
+    .cookie__toggle-tag { margin-left: 0; flex-basis: 100%; }
+    .cookie p { font-size: 14px; }
+  }
+  /* large screens and TVs are viewed from afar: scale the whole dialog */
+  @media (min-width: 1600px) { .cookie { zoom: 1.25; } }
+  @media (min-width: 2400px) { .cookie { zoom: 1.7; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cookie__btn, .cookie__switch, .cookie__switch::after { transition: none; }
+    .cookie__btn:hover, .cookie__btn:active { transform: none; box-shadow: 5px 5px 0 var(--ink); }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <h1>Retro Cookie Banner</h1>
+  <p>A free, open-source cookie consent banner in a single HTML file. No framework, no build step, no external requests: copy the file into any website and it shows a GDPR-style cookie popup with <em>Accept All</em>, <em>Deny All</em> and per-category toggles, then remembers the choice in <code>localStorage</code>. Source and documentation: <a href="https://github.com/AbbeyLubber/retro-cookie-banner">github.com/AbbeyLubber/retro-cookie-banner</a>.</p>
+  <p>This page is the live demo. English is the default language and is shown for any browser locale that is not listed below. Change your browser language and reload, or click one of these:
+    <a href="?lang=en-GB"><code>?lang=en-GB</code></a> (English, default),
+    <a href="?lang=zh-HK"><code>?lang=zh-HK</code></a> (香港地區語言),
+    <a href="?lang=ru-RU"><code>?lang=ru-RU</code></a> (Русский язык),
+    <a href="?lang=uk-UA"><code>?lang=uk-UA</code></a> (Українська мова),
+    <a href="?lang=zh-SG"><code>?lang=zh-SG</code></a> (新加坡地区语言),
+    <a href="?lang=fi-FI"><code>?lang=fi-FI</code></a> (Suomen kieli),
+    <a href="?lang=de-DE"><code>?lang=de-DE</code></a> (Deutsche Sprache),
+    <a href="?lang=be-BY"><code>?lang=be-BY</code></a> (Беларуская мова),
+    <a href="?lang=et-EE"><code>?lang=et-EE</code></a> (Eesti keel).</p>
+</div>
+
+<script>
+  // Demo only: a language link re-opens the banner even after a choice was saved
+  document.querySelector('.page').addEventListener('click', function (e) {
+    if (e.target.closest('a[href^="?lang="]')) { try { localStorage.removeItem('cookieConsent'); } catch (err) {} }
+  });
+</script>
+
+<!-- Hidden by default: the script shows it only when no consent is stored yet -->
+<div class="cookie-overlay" id="cookieOverlay" hidden>
+  <div class="cookie" id="cookieDialog" role="dialog" aria-modal="true" aria-labelledby="cookieTitle">
+    <div class="cookie__title" id="cookieTitle"></div>
+
+    <div class="cookie__main" id="cookieMain">
+      <p data-t-html="p1"></p>
+      <p data-t-html="p2"></p>
+    </div>
+
+    <div class="cookie__settings" id="cookieSettings" hidden>
+      <p class="cookie__settings-intro" data-t="settingsIntro"></p>
+      <div class="cookie__toggles">
+        <label class="cookie__toggle cookie__toggle--locked">
+          <input type="checkbox" role="switch" checked disabled data-cat="necessary"><span class="cookie__switch"></span>
+          <span class="cookie__toggle-text">
+            <span class="cookie__toggle-name"><span data-t="necessary"></span><span class="cookie__toggle-tag" data-t="alwaysOn"></span></span>
+            <span class="cookie__toggle-desc" data-t="necessaryDesc"></span>
+          </span>
+        </label>
+        <label class="cookie__toggle">
+          <input type="checkbox" role="switch" data-cat="personalization"><span class="cookie__switch"></span>
+          <span class="cookie__toggle-text">
+            <span class="cookie__toggle-name" data-t="personalization"></span>
+            <span class="cookie__toggle-desc" data-t="personalizationDesc"></span>
+          </span>
+        </label>
+        <label class="cookie__toggle">
+          <input type="checkbox" role="switch" data-cat="statistics"><span class="cookie__switch"></span>
+          <span class="cookie__toggle-text">
+            <span class="cookie__toggle-name" data-t="statistics"></span>
+            <span class="cookie__toggle-desc" data-t="statisticsDesc"></span>
+          </span>
+        </label>
+        <label class="cookie__toggle">
+          <input type="checkbox" role="switch" data-cat="marketing"><span class="cookie__switch"></span>
+          <span class="cookie__toggle-text">
+            <span class="cookie__toggle-name" data-t="marketing"></span>
+            <span class="cookie__toggle-desc" data-t="marketingDesc"></span>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="cookie__meta" id="cookieMeta">
+      <button type="button" class="cookie__back" id="cookieBack" data-action="back" data-t="back" hidden></button>
+      <span class="cookie__lang" id="cookieLang" hidden>
+        <span data-t="langLabel"></span>
+        <span aria-hidden="true">[</span><button type="button" class="cookie__lang-opt" id="cookieLangEn" lang="en" data-lang="en"></button><span aria-hidden="true">]</span>
+        <span aria-hidden="true">[</span><button type="button" class="cookie__lang-opt" id="cookieLangNative"></button><span aria-hidden="true">]</span>
+      </span>
+    </div>
+
+    <!-- one button set for both screens: the third one switches between Manage and Accept Selected -->
+    <div class="cookie__actions" id="cookieActions">
+      <button type="button" class="cookie__btn cookie__btn--primary" id="btnAccept" data-action="accept" data-t="accept"></button>
+      <button type="button" class="cookie__btn" data-action="deny" data-t="deny"></button>
+      <button type="button" class="cookie__btn" id="btnThird"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var STORAGE_KEY = 'cookieConsent';
+  var overlay = document.getElementById('cookieOverlay');
+
+  // Show the dialog on the first visit only: bail out if a choice is already stored
+  try { if (localStorage.getItem(STORAGE_KEY)) return; } catch (e) {}
+
+  var T = {
+    en: {
+      langName: 'English', langLabel: 'Language:',
+      title: 'Cookie Settings', settingsTitle: 'Manage Cookies',
+      p1: 'Our website uses some cookies and records your IP address for the purposes of accessibility, security, and managing your access to the telecommunication network. You can disable data collection and cookies by changing your browser settings, but it may affect how this website functions. <a href="#">Learn more</a>',
+      p2: 'With your consent, we may also use cookies and your IP address to collect individual statistics and provide you with personalised offers and ads subject to the <a href="#">Privacy Notice</a> and the <a href="#">Terms of Use</a>. We may use <a href="#">third-party services</a> for this purpose. You can adjust or withdraw your consent at any time on the <a href="#">cookie opt-out page</a>.',
+      accept: 'Accept All', deny: 'Deny All', manage: 'Manage Cookies', save: 'Accept Selected',
+      settingsIntro: 'Choose which cookies we may use', back: '← Back', alwaysOn: '(always on)',
+      necessary: 'Necessary', necessaryDesc: 'Make the site work: security, sign-in, and remembering this choice. Cannot be switched off.',
+      personalization: 'Personalisation', personalizationDesc: 'Remember your language, region and interface preferences.',
+      statistics: 'Statistics', statisticsDesc: 'Anonymous usage data that helps us improve the site.',
+      marketing: 'Marketing', marketingDesc: 'Used by us and third parties to show you relevant offers and ads.'
+    },
+    ru: {
+      langName: 'Русский', langLabel: 'Язык:',
+      title: 'Настройки cookie', settingsTitle: 'Настройка cookie',
+      p1: 'Наш сайт использует некоторые cookie-файлы и записывает ваш IP-адрес в целях обеспечения доступности, безопасности и управления вашим доступом к телекоммуникационной сети. Вы можете отключить сбор данных и cookie в настройках браузера, но это может повлиять на работу сайта. <a href="#">Подробнее</a>',
+      p2: 'С вашего согласия мы также можем использовать cookie и ваш IP-адрес для сбора индивидуальной статистики и предоставления персонализированных предложений и рекламы в соответствии с <a href="#">Политикой конфиденциальности</a> и <a href="#">Условиями использования</a>. Для этого мы можем привлекать <a href="#">сторонние сервисы</a>. Вы можете изменить или отозвать согласие в любое время на <a href="#">странице отказа от cookie</a>.',
+      accept: 'Принять все', deny: 'Отклонить все', manage: 'Настроить cookie', save: 'Принять выбранные',
+      settingsIntro: 'Выберите, какие cookie разрешить', back: '← Назад', alwaysOn: '(всегда включены)',
+      necessary: 'Необходимые', necessaryDesc: 'Обеспечивают работу сайта: безопасность, вход в аккаунт, запоминание этого выбора. Отключить нельзя.',
+      personalization: 'Персонализация', personalizationDesc: 'Запоминают ваш язык, регион и настройки интерфейса.',
+      statistics: 'Статистика', statisticsDesc: 'Анонимные данные о посещениях, чтобы улучшать сайт.',
+      marketing: 'Маркетинг', marketingDesc: 'Используются нами и партнёрами для показа релевантных предложений и рекламы.'
+    },
+    uk: {
+      langName: 'Українська', langLabel: 'Мова:',
+      title: 'Налаштування cookie', settingsTitle: 'Керування cookie',
+      p1: 'Наш сайт використовує деякі cookie-файли та записує вашу IP-адресу з метою забезпечення доступності, безпеки та керування вашим доступом до телекомунікаційної мережі. Ви можете вимкнути збір даних і cookie в налаштуваннях браузера, але це може вплинути на роботу сайту. <a href="#">Докладніше</a>',
+      p2: 'За вашою згодою ми також можемо використовувати cookie та вашу IP-адресу для збору індивідуальної статистики й надання персоналізованих пропозицій і реклами відповідно до <a href="#">Політики конфіденційності</a> та <a href="#">Умов використання</a>. Для цього ми можемо залучати <a href="#">сторонні сервіси</a>. Ви можете змінити або відкликати згоду в будь-який час на <a href="#">сторінці відмови від cookie</a>.',
+      accept: 'Прийняти все', deny: 'Відхилити все', manage: 'Налаштувати cookie', save: 'Прийняти вибрані',
+      settingsIntro: 'Виберіть, які cookie дозволити', back: '← Назад', alwaysOn: '(завжди увімкнені)',
+      necessary: 'Необхідні', necessaryDesc: 'Забезпечують роботу сайту: безпеку, вхід в обліковий запис, запам’ятовування цього вибору. Вимкнути не можна.',
+      personalization: 'Персоналізація', personalizationDesc: 'Запам’ятовують вашу мову, регіон і налаштування інтерфейсу.',
+      statistics: 'Статистика', statisticsDesc: 'Анонімні дані про відвідування, щоб покращувати сайт.',
+      marketing: 'Маркетинг', marketingDesc: 'Використовуються нами та партнерами для показу релевантних пропозицій і реклами.'
+    },
+    fi: {
+      langName: 'Suomi', langLabel: 'Kieli:',
+      title: 'Evästeasetukset', settingsTitle: 'Evästeiden hallinta',
+      p1: 'Sivustomme käyttää joitakin evästeitä ja tallentaa IP-osoitteesi saavutettavuuden, tietoturvan ja televiestintäverkkoon pääsyn hallinnan vuoksi. Voit estää tietojen keräämisen ja evästeet selaimen asetuksista, mutta se voi vaikuttaa sivuston toimintaan. <a href="#">Lue lisää</a>',
+      p2: 'Suostumuksellasi voimme myös käyttää evästeitä ja IP-osoitettasi yksilöllisten tilastojen keräämiseen sekä personoitujen tarjousten ja mainosten näyttämiseen <a href="#">tietosuojaselosteen</a> ja <a href="#">käyttöehtojen</a> mukaisesti. Voimme käyttää tähän <a href="#">kolmansien osapuolten palveluita</a>. Voit muuttaa tai peruuttaa suostumuksesi milloin tahansa <a href="#">evästeiden kieltosivulla</a>.',
+      accept: 'Hyväksy kaikki', deny: 'Hylkää kaikki', manage: 'Hallitse evästeitä', save: 'Hyväksy valitut',
+      settingsIntro: 'Valitse, mitkä evästeet sallitaan', back: '← Takaisin', alwaysOn: '(aina käytössä)',
+      necessary: 'Välttämättömät', necessaryDesc: 'Pitävät sivuston toiminnassa: tietoturva, kirjautuminen ja tämän valinnan muistaminen. Ei voi poistaa käytöstä.',
+      personalization: 'Personointi', personalizationDesc: 'Muistavat kielesi, alueesi ja käyttöliittymän asetukset.',
+      statistics: 'Tilastot', statisticsDesc: 'Anonyymejä käyttötietoja, joiden avulla parannamme sivustoa.',
+      marketing: 'Markkinointi', marketingDesc: 'Me ja kumppanimme käytämme niitä osuvien tarjousten ja mainosten näyttämiseen.'
+    },
+    de: {
+      langName: 'Deutsch', langLabel: 'Sprache:',
+      title: 'Cookie-Einstellungen', settingsTitle: 'Cookies verwalten',
+      p1: 'Unsere Website verwendet einige Cookies und speichert Ihre IP-Adresse zum Zweck der Barrierefreiheit, der Sicherheit und der Verwaltung Ihres Zugangs zum Telekommunikationsnetz. Sie können die Datenerfassung und Cookies in den Einstellungen Ihres Browsers deaktivieren, dies kann jedoch die Funktion dieser Website beeinträchtigen. <a href="#">Mehr erfahren</a>',
+      p2: 'Mit Ihrer Einwilligung dürfen wir Cookies und Ihre IP-Adresse auch verwenden, um individuelle Statistiken zu erheben und Ihnen personalisierte Angebote und Werbung gemäß der <a href="#">Datenschutzerklärung</a> und den <a href="#">Nutzungsbedingungen</a> anzuzeigen. Dafür können wir <a href="#">Dienste Dritter</a> einsetzen. Sie können Ihre Einwilligung jederzeit auf der <a href="#">Cookie-Opt-out-Seite</a> ändern oder widerrufen.',
+      accept: 'Alle akzeptieren', deny: 'Alle ablehnen', manage: 'Cookies verwalten', save: 'Auswahl akzeptieren',
+      settingsIntro: 'Wählen Sie, welche Cookies wir verwenden dürfen', back: '← Zurück', alwaysOn: '(immer aktiv)',
+      necessary: 'Notwendig', necessaryDesc: 'Sorgen dafür, dass die Website funktioniert: Sicherheit, Anmeldung und das Speichern dieser Auswahl. Können nicht deaktiviert werden.',
+      personalization: 'Personalisierung', personalizationDesc: 'Merken sich Ihre Sprache, Region und Oberflächeneinstellungen.',
+      statistics: 'Statistik', statisticsDesc: 'Anonyme Nutzungsdaten, die uns helfen, die Website zu verbessern.',
+      marketing: 'Marketing', marketingDesc: 'Werden von uns und Dritten genutzt, um Ihnen passende Angebote und Werbung zu zeigen.'
+    },
+    be: {
+      langName: 'Беларуская', langLabel: 'Мова:',
+      title: 'Налады cookie', settingsTitle: 'Кіраванне cookie',
+      p1: 'Наш сайт выкарыстоўвае некаторыя cookie-файлы і запісвае ваш IP-адрас у мэтах забеспячэння даступнасці, бяспекі і кіравання вашым доступам да тэлекамунікацыйнай сеткі. Вы можаце адключыць збор даных і cookie ў наладах браўзера, але гэта можа паўплываць на працу сайта. <a href="#">Падрабязней</a>',
+      p2: 'З вашай згоды мы таксама можам выкарыстоўваць cookie і ваш IP-адрас для збору індывідуальнай статыстыкі і прадастаўлення персаналізаваных прапаноў і рэкламы ў адпаведнасці з <a href="#">Палітыкай канфідэнцыйнасці</a> і <a href="#">Умовамі выкарыстання</a>. Для гэтага мы можам прыцягваць <a href="#">старонныя сэрвісы</a>. Вы можаце змяніць або адклікаць згоду ў любы час на <a href="#">старонцы адмовы ад cookie</a>.',
+      accept: 'Прыняць усе', deny: 'Адхіліць усе', manage: 'Наладзіць cookie', save: 'Прыняць выбраныя',
+      settingsIntro: 'Выберыце, якія cookie дазволіць', back: '← Назад', alwaysOn: '(заўсёды ўключаны)',
+      necessary: 'Неабходныя', necessaryDesc: 'Забяспечваюць працу сайта: бяспеку, уваход у акаўнт, запамінанне гэтага выбару. Адключыць нельга.',
+      personalization: 'Персаналізацыя', personalizationDesc: 'Запамінаюць вашу мову, рэгіён і налады інтэрфейсу.',
+      statistics: 'Статыстыка', statisticsDesc: 'Ананімныя даныя пра наведванні, каб паляпшаць сайт.',
+      marketing: 'Маркетынг', marketingDesc: 'Выкарыстоўваюцца намі і партнёрамі для паказу рэлевантных прапаноў і рэкламы.'
+    },
+    et: {
+      langName: 'Eesti', langLabel: 'Keel:',
+      title: 'Küpsiste seaded', settingsTitle: 'Küpsiste haldamine',
+      p1: 'Meie veebisait kasutab mõningaid küpsiseid ja salvestab teie IP-aadressi ligipääsetavuse, turvalisuse ja telekommunikatsioonivõrgule juurdepääsu haldamise eesmärgil. Saate andmete kogumise ja küpsised brauseri seadetes keelata, kuid see võib mõjutada veebisaidi toimimist. <a href="#">Loe lähemalt</a>',
+      p2: 'Teie nõusolekul võime kasutada küpsiseid ja teie IP-aadressi ka individuaalse statistika kogumiseks ning isikupärastatud pakkumiste ja reklaamide kuvamiseks vastavalt <a href="#">privaatsusteatele</a> ja <a href="#">kasutustingimustele</a>. Selleks võime kasutada <a href="#">kolmandate osapoolte teenuseid</a>. Saate oma nõusolekut igal ajal muuta või tagasi võtta <a href="#">küpsistest loobumise lehel</a>.',
+      accept: 'Nõustu kõigiga', deny: 'Keeldu kõigist', manage: 'Halda küpsiseid', save: 'Nõustu valitutega',
+      settingsIntro: 'Valige, milliseid küpsiseid lubada', back: '← Tagasi', alwaysOn: '(alati sees)',
+      necessary: 'Vajalikud', necessaryDesc: 'Hoiavad veebisaidi töös: turvalisus, sisselogimine ja selle valiku meeldejätmine. Ei saa välja lülitada.',
+      personalization: 'Isikupärastamine', personalizationDesc: 'Jätavad meelde teie keele, piirkonna ja liidese eelistused.',
+      statistics: 'Statistika', statisticsDesc: 'Anonüümsed kasutusandmed, mis aitavad meil veebisaiti parandada.',
+      marketing: 'Turundus', marketingDesc: 'Kasutame meie ja kolmandad osapooled teile sobivate pakkumiste ja reklaamide näitamiseks.'
+    },
+    'zh-HK': {
+      langName: '繁體中文', langLabel: '語言：',
+      title: 'Cookie 設定', settingsTitle: '管理 Cookie',
+      p1: '本網站會使用部分 Cookie 並記錄您的 IP 位址，以用於無障礙存取、安全性以及管理您對電訊網絡的存取。您可以透過變更瀏覽器設定停用資料收集及 Cookie，但這可能影響本網站的運作。<a href="#">了解更多</a>',
+      p2: '經您同意後，我們亦可能使用 Cookie 及您的 IP 位址收集個人統計資料，並根據<a href="#">私隱聲明</a>及<a href="#">使用條款</a>向您提供個人化優惠及廣告。我們可能為此使用<a href="#">第三方服務</a>。您可隨時前往<a href="#">Cookie 選擇退出頁面</a>調整或撤回同意。',
+      accept: '全部接受', deny: '全部拒絕', manage: '管理 Cookie', save: '接受所選',
+      settingsIntro: '請選擇允許使用的 Cookie', back: '← 返回', alwaysOn: '（一律啟用）',
+      necessary: '必要', necessaryDesc: '維持網站運作：安全性、登入及記住此選擇。無法關閉。',
+      personalization: '個人化', personalizationDesc: '記住您的語言、地區及介面偏好。',
+      statistics: '統計', statisticsDesc: '匿名使用數據，協助我們改善網站。',
+      marketing: '市場推廣', marketingDesc: '由我們及第三方用於向您顯示相關優惠及廣告。'
+    },
+    'zh-SG': {
+      langName: '简体中文', langLabel: '语言：',
+      title: 'Cookie 设置', settingsTitle: '管理 Cookie',
+      p1: '本网站会使用部分 Cookie 并记录您的 IP 地址，以用于无障碍访问、安全性以及管理您对电信网络的访问。您可以通过更改浏览器设置禁用数据收集和 Cookie，但这可能影响本网站的运行。<a href="#">了解更多</a>',
+      p2: '经您同意后，我们还可能使用 Cookie 和您的 IP 地址收集个人统计数据，并根据<a href="#">隐私声明</a>和<a href="#">使用条款</a>向您提供个性化优惠和广告。我们可能为此使用<a href="#">第三方服务</a>。您可以随时前往<a href="#">Cookie 选择退出页面</a>调整或撤回同意。',
+      accept: '全部接受', deny: '全部拒绝', manage: '管理 Cookie', save: '接受所选',
+      settingsIntro: '请选择允许使用的 Cookie', back: '← 返回', alwaysOn: '（始终启用）',
+      necessary: '必要', necessaryDesc: '维持网站运行：安全性、登录及记住此选择。无法关闭。',
+      personalization: '个性化', personalizationDesc: '记住您的语言、地区及界面偏好。',
+      statistics: '统计', statisticsDesc: '匿名使用数据，帮助我们改进网站。',
+      marketing: '营销', marketingDesc: '由我们及第三方用于向您显示相关优惠及广告。'
+    }
+  };
+
+  // Browser language -> dictionary key. ?lang=... in the URL is for testing.
+  function detectLang() {
+    var forced = new URLSearchParams(location.search).get('lang');
+    var langs = forced ? [forced] : (navigator.languages || [navigator.language || 'en']);
+    for (var i = 0; i < langs.length; i++) {
+      var l = String(langs[i]).toLowerCase();
+      if (l.indexOf('uk') === 0 || l === 'ua') return 'uk';
+      if (l.indexOf('ru') === 0) return 'ru';
+      if (l === 'fi' || l.indexOf('fi-') === 0) return 'fi';
+      if (l === 'de' || l.indexOf('de-') === 0) return 'de';
+      if (l === 'be' || l.indexOf('be-') === 0) return 'be';
+      if (l === 'et' || l.indexOf('et-') === 0) return 'et';
+      if (l === 'zh-hk' || l === 'zh-hant-hk' || l === 'zh-mo' || l.indexOf('zh-hant') === 0 || l === 'zh-tw') return 'zh-HK';
+      if (l === 'zh-sg' || l === 'zh-hans-sg' || l.indexOf('zh-hans') === 0 || l === 'zh-cn' || l === 'zh') return 'zh-SG';
+      if (l.indexOf('en') === 0) return 'en';
+    }
+    return 'en';
+  }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var dialog = $('cookieDialog'), title = $('cookieTitle'),
+      main = $('cookieMain'), settings = $('cookieSettings'),
+      meta = $('cookieMeta'), backBtn = $('cookieBack'), langBox = $('cookieLang'),
+      enBtn = $('cookieLangEn'), natBtn = $('cookieLangNative'),
+      actions = $('cookieActions'), acceptBtn = $('btnAccept'), thirdBtn = $('btnThird');
+  var textNodes = dialog.querySelectorAll('[data-t]');
+  var htmlNodes = dialog.querySelectorAll('[data-t-html]');
+  var toggles = settings.querySelectorAll('input[data-cat]:not([disabled])');
+
+  var nativeLang = detectLang();
+  var current = nativeLang;
+  var view = 'main'; // 'main' | 'settings'
+
+  // Language switch only when the browser language is not English; button positions are fixed
+  langBox.hidden = nativeLang === 'en';
+  natBtn.textContent = T[nativeLang].langName;
+  natBtn.lang = natBtn.dataset.lang = nativeLang;
+  enBtn.textContent = T.en.langName;
+
+  // Texts that depend on the language only
+  function setLang(lang) {
+    current = lang;
+    var t = T[lang], i;
+    dialog.lang = lang === 'en' ? 'en-GB' : lang;
+    for (i = 0; i < textNodes.length; i++) textNodes[i].textContent = t[textNodes[i].dataset.t];
+    for (i = 0; i < htmlNodes.length; i++) htmlNodes[i].innerHTML = t[htmlNodes[i].dataset.tHtml];
+    [enBtn, natBtn].forEach(function (b) {
+      var active = b.dataset.lang === lang;
+      b.classList.toggle('cookie__lang-opt--active', active);
+      b.classList.toggle('cookie__lang-opt--inactive', !active);
+      b.disabled = active;
+    });
+    setView(view);
+  }
+
+  // Texts and visibility that depend on the current screen
+  function setView(v) {
+    view = v;
+    var s = v === 'settings', t = T[current];
+    title.textContent = s ? t.settingsTitle : t.title;
+    thirdBtn.textContent = s ? t.save : t.manage;
+    thirdBtn.dataset.action = s ? 'save' : 'manage';
+    actions.classList.toggle('cookie__actions--spread', s);
+    main.hidden = s;
+    settings.hidden = !s;
+    backBtn.hidden = !s;
+    meta.hidden = langBox.hidden && !s;
+  }
+
+  // Stores { necessary: true, personalization: bool, statistics: bool, marketing: bool }
+  function close(consent) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(consent)); } catch (e) {}
+    document.removeEventListener('keydown', onKey);
+    document.documentElement.classList.remove('cookie-open');
+    overlay.remove();
+  }
+  function consentAll(value) {
+    return { necessary: true, personalization: value, statistics: value, marketing: value };
+  }
+  function consentFromForm() {
+    var c = { necessary: true };
+    for (var i = 0; i < toggles.length; i++) c[toggles[i].dataset.cat] = toggles[i].checked;
+    return c;
+  }
+
+  // Single delegated handler for every button in the dialog
+  dialog.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-action], [data-lang]');
+    if (!el || el.disabled) return;
+    if (el.dataset.lang) { setLang(el.dataset.lang); return; }
+    switch (el.dataset.action) {
+      case 'accept': close(consentAll(true)); break;
+      case 'deny':   close(consentAll(false)); break;
+      case 'save':   close(consentFromForm()); break;
+      case 'manage': setView('settings'); acceptBtn.focus(); break;
+      case 'back':   setView('main'); thirdBtn.focus(); break;
+    }
+  });
+
+  // Enter = Accept All, unless the focus is on an element with its own action (button, link, toggle)
+  function onKey(e) {
+    if (e.key === 'Enter') {
+      var el = document.activeElement;
+      var ownAction = el && dialog.contains(el) && /^(BUTTON|A|INPUT)$/.test(el.tagName);
+      if (!ownAction) { e.preventDefault(); close(consentAll(true)); }
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    // Keep Tab inside the dialog until a choice is made
+    var items = Array.prototype.filter.call(
+      dialog.querySelectorAll('button:not([disabled]), input:not([disabled]), a[href]'),
+      function (el) { return el.offsetParent !== null; }
+    );
+    if (!items.length) return;
+    var first = items[0], last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+
+  setLang(nativeLang);
+  document.documentElement.classList.add('cookie-open');
+  document.addEventListener('keydown', onKey);
+  overlay.hidden = false;
+  acceptBtn.focus();
+})();
+</script>
+</body>
+</html>

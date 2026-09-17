@@ -1,0 +1,22 @@
+# retro-cookie-banner
+
+> Free, open-source cookie consent banner (GDPR cookie popup) in a single HTML file. Vanilla JavaScript, zero dependencies, retro/brutalist style. Detects the browser language and ships nine languages: English, German, Russian, Ukrainian, Belarusian, Finnish, Estonian, Traditional Chinese (Hong Kong), Simplified Chinese (Singapore). Accept all, deny all, or choose categories (necessary, personalisation, statistics, marketing). Keyboard-accessible, stores the choice as JSON in localStorage, shows itself once. MIT licence.
+
+Author: Abbey Lubber. Repository: https://github.com/AbbeyLubber/retro-cookie-banner
+
+## Key facts
+
+- One file: `index.html` contains the CSS, markup and script. No framework, no build step, no external requests.
+- Integration: copy the `<style>` block, the `<div class="cookie-overlay">` markup and the `<script>` block into any page.
+- Consent format: `localStorage.cookieConsent` = `{"necessary":true,"personalization":bool,"statistics":bool,"marketing":bool}`.
+- Language detection: `navigator.languages`, first match wins; unknown locales fall back to English. Force with `?lang=xx-XX`.
+- Accessibility: `role="dialog"`, `aria-modal`, `role="switch"`, focus trap, visible focus rings, `prefers-reduced-motion`, ON/OFF text inside toggles so state is readable without colour.
+- Responsive from 320 px phones to TV screens.
+- Encoding: UTF-8 with BOM so the banner survives a wrong server charset.
+
+## Links
+
+- [Live demo](https://abbeylubber.github.io/retro-cookie-banner/): the banner on a demo page; add `?lang=de-DE`, `?lang=ru-RU`, `?lang=uk-UA`, `?lang=be-BY`, `?lang=fi-FI`, `?lang=et-EE`, `?lang=zh-HK` or `?lang=zh-SG` for other languages.
+- [README](https://github.com/AbbeyLubber/retro-cookie-banner#readme): features, usage, customisation, adding a language, FAQ, comparison with other cookie consent libraries.
+- [Source file](https://github.com/AbbeyLubber/retro-cookie-banner/blob/main/banner/index.html): the banner itself.
+- [Licence](https://github.com/AbbeyLubber/retro-cookie-banner/blob/main/LICENSE): MIT.

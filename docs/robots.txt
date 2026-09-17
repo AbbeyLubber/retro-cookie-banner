@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://abbeylubber.github.io/retro-cookie-banner/sitemap.xml
