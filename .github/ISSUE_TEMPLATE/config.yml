@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Question about integrating the banner
+    url: https://github.com/AbbeyLubber/retro-cookie-banner/discussions/categories/q-a
+    about: Reading the consent record, loading analytics or ads only after consent, CSP, custom texts and links.
+  - name: Idea or feature request
+    url: https://github.com/AbbeyLubber/retro-cookie-banner/discussions/categories/ideas
+    about: Features, design tweaks, new categories. Translations go through the Translation issue template.
+  - name: Security issue
+    url: https://github.com/AbbeyLubber/retro-cookie-banner/blob/main/.github/SECURITY.md
+    about: Read SECURITY.md first, then open a bug report with the steps to reproduce. There is no bug bounty; reports are read and fixed promptly.

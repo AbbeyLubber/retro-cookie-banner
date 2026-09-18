@@ -1,0 +1,67 @@
+name: Translation
+description: Add a language or fix wording in an existing one.
+title: "[translation] "
+labels: ["translation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Translations are the most welcome contribution. Copy the `en` object from the `T` dictionary in `banner/index.html`, translate every value and paste it below. Keep `langName` in the language itself (`Polski`, not `Polish`). Links inside `p1` and `p2` are written as `[label](key)` with the five keys `learnMore`, `privacy`, `terms`, `thirdParties` and `optOut`. Keep the wording neutral: necessary cookies are always set, optional ones only with consent, no claims about IP addresses, sign-in or anonymised data. The banner is laid out left to right; a right-to-left language would need layout work first, so please open a discussion for one.
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      placeholder: Polish
+    validations:
+      required: true
+  - type: input
+    id: native
+    attributes:
+      label: Name in the language itself (`langName`)
+      placeholder: Polski
+    validations:
+      required: true
+  - type: input
+    id: codes
+    attributes:
+      label: Locale codes to detect
+      description: Everything `navigator.languages` may report for this language.
+      placeholder: pl, pl-PL
+    validations:
+      required: true
+  - type: textarea
+    id: dictionary
+    attributes:
+      label: Dictionary entry
+      description: The complete object, every key present.
+      render: js
+      value: |
+        pl: {
+          langName: '', langLabel: '',
+          title: '', settingsTitle: '',
+          p1: '… [Learn more](learnMore)',
+          p2: '… [Privacy Notice](privacy) … [Terms of Use](terms) … [third-party services](thirdParties) … [cookie settings page](optOut).',
+          accept: '', deny: '', manage: '', save: '',
+          settingsIntro: '', back: '← ', alwaysOn: '',
+          necessary: '', necessaryDesc: '',
+          personalization: '', personalizationDesc: '',
+          statistics: '', statisticsDesc: '',
+          marketing: '', marketingDesc: ''
+        },
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Fonts the language needs, words that must not hyphenate, anything a reviewer who does not speak the language should know.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: Every key from the `en` object is present.
+          required: true
+        - label: The five link keys are in place and the wording is neutral.
+          required: true
+        - label: I am a native or fluent speaker, or the text was reviewed by one.

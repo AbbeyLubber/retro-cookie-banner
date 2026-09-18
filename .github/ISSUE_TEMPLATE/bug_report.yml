@@ -1,0 +1,65 @@
+name: Bug report
+description: Something in the banner renders or behaves wrongly.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. The banner is one file, so most bugs can be reproduced on the live demo: https://abbeylubber.github.io/retro-cookie-banner/ (add `?lang=de-DE`, `?lang=zh-HK` and so on). Questions about integration belong in Discussions, not here.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open …
+        2. Click Manage Cookies
+        3. …
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where does it happen
+      options:
+        - On the live demo
+        - On my own site only
+        - Both
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      placeholder: Safari 17.4 on iOS, Chrome 128 on Windows, Firefox 52 …
+    validations:
+      required: true
+  - type: input
+    id: lang
+    attributes:
+      label: Language
+      description: The `?lang=` value you used, or the browser language if you did not force one.
+      placeholder: zh-HK
+  - type: input
+    id: viewport
+    attributes:
+      label: Screen width
+      placeholder: 320 px, 390 px, 1280 px, 4K TV …
+  - type: textarea
+    id: host
+    attributes:
+      label: Host page details (own site only)
+      description: Anything the page adds around the banner. A Content-Security-Policy header, a framework, other scripts, `dir="rtl"`, a custom `RetroCookieConfig`.
+      render: text
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: Paste an image here. For layout bugs a screenshot says more than a paragraph.
