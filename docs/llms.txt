@@ -8,11 +8,15 @@ Author: Abbey Lubber. Repository: https://github.com/AbbeyLubber/retro-cookie-ba
 
 - One file: `index.html` contains the CSS, markup and script. No framework, no build step, no external requests.
 - Integration: copy the `<style>` block, the `<div class="cookie-overlay">` markup and the `<script>` block into any page.
-- Consent format: `localStorage.cookieConsent` = `{"necessary":true,"personalization":bool,"statistics":bool,"marketing":bool}`.
+- Consent record: `localStorage['retroCookieBanner.consent']` = `{"schemaVersion":2,"policyVersion":null,"updatedAt":ISO,"expiresAt":ISO,"categories":{"necessary":true,"personalization":bool,"statistics":bool,"marketing":bool}}`. Expires after 182 days by default; a record with another schema or policy version, an expired date or a non-boolean category is ignored and the banner asks again. Falls back to sessionStorage, then memory.
+- API: `window.RetroCookie` with `getConsent()`, `open()`, `close()`, `acceptAll()`, `rejectAll()`, `update({...})`, `reset()`, `version`. Events on `document`: `cookieconsent:ready`, `cookieconsent:change` (detail: `consent`, `categories`, `previous`).
+- Script gating: `<script type="text/plain" data-cookie-category="statistics" data-src="...">` (or inline code) runs once its category is allowed.
+- Configuration: `window.RetroCookieConfig` defined before the script: `storageKey`, `policyVersion`, `expiryDays`, `lang`, `urls` (learnMore, privacy, terms, thirdParties, optOut), `texts` (per-language overrides).
 - Language detection: `navigator.languages`, first match wins; unknown locales fall back to English. Force with `?lang=xx-XX`.
 - Accessibility: `role="dialog"`, `aria-modal`, `role="switch"`, focus trap, visible focus rings, `prefers-reduced-motion`, ON/OFF text inside toggles so state is readable without colour.
 - Responsive from 320 px phones to TV screens.
 - Encoding: UTF-8 with BOM so the banner survives a wrong server charset.
+- CSP: inline blocks need a nonce (or 'unsafe-inline'); gated scripts pass their nonce to the live script. A `<noscript>` notice covers visitors without JavaScript.
 
 ## Links
 
